@@ -1,0 +1,8 @@
+<!ENTITY pixImgUploader.label "Your localized menuitem">
+<!ENTITY pixImgUploaderContext.label "Your Menuitem">
+<!ENTITY pixImgUploaderContext.accesskey "Y">
+<!ENTITY pixImgUploaderToolbarButton.label "Your Toolbar Button">
+<!ENTITY pixImgUploaderToolbarButton.tooltip "This is your toolbar button!">
+<!ENTITY pixImgUploaderSidebar.label "Your Sidebar">
+<!ENTITY pixImgUploaderToolbar.name  "example">
+<!ENTITY pixImgUploaderToolbar.label "This is an example toolbar. You can hide it under View &gt; toolbars &gt; &pixImgUploaderToolbar.name;">
