@@ -9,3 +9,4 @@ pixImgUploader.showFirefoxContextMenu = function(event) {
 };
 
 window.addEventListener("load", pixImgUploader.onFirefoxLoad, false);
+

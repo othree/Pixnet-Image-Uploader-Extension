@@ -2,8 +2,11 @@
 <?xml-stylesheet href="chrome://pixImgUploader/skin/overlay.css" type="text/css"?>
 <!DOCTYPE overlay SYSTEM "chrome://pixImgUploader/locale/overlay.dtd">
 <overlay id="pixImgUploader-overlay" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-  <script src="overlay.js"/>
-  <script src="ff-overlay.js"/>
+    <script src="oauth.js"/>
+    <script src="sha1.js"/>
+    <script src="base64.js"/>
+    <script src="overlay.js"/>
+    <script src="ff-overlay.js"/>
 
   <stringbundleset id="stringbundleset">
     <stringbundle id="pixImgUploader-strings" src="chrome://pixImgUploader/locale/overlay.properties"/>
