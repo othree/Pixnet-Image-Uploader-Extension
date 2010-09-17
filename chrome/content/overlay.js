@@ -141,17 +141,14 @@ pixConn = {
             pixConn.parseRequestToken(pixConn.httpReq.responseText);
             alert(pixConn.oAuthTokens["xoauth_request_auth_url"]);
             setTimeout(function () {
-                gBrowser.addEventListener('load', function (event) {
-                //alert(doc);
-                //setTimeout(function () {
-                    //alert('a');
-                    //alert(event.originalTarget);
-                    //alert(doc.getElementById('oauth_verifier').innerHTML);
-                //}, 1000);
+                var tab = gBrowser.addTab(pixConn.oAuthTokens["xoauth_request_auth_url"]);
+                tab.addEventListener('load', function (event) {
+                    gBrowser.selectedTab = tab;
+                    var code = gBrowser.contentDocument.getElementById('oauth_verifier').innerHTML;
+                    gBrowser.removeTab(tab);
+                    alert(code);
                 }, false);
-                var tab = getBrowser().addTab(pixConn.oAuthTokens["xoauth_request_auth_url"]),
-                    doc = tab.ownerDocument;
-            }, 5000);
+            }, 100);
             //alert(pixConn.httpReq.responseText);
         }
     },
