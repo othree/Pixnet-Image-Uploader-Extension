@@ -136,17 +136,22 @@ pixConn = {
         pixConn.httpReq.setRequestHeader('Authorization', message.authHeader);
         var params = 'oauth_signature=' + encodeURIComponent(Base64.encode(signature));
         pixConn.httpReq.send(params);
-            alert(pixConn.httpReq.status);
         if (pixConn.httpReq.status == 200){
             pixConn.parseRequestToken(pixConn.httpReq.responseText);
-            alert(pixConn.oAuthTokens["xoauth_request_auth_url"]);
             setTimeout(function () {
-                var tab = gBrowser.addTab(pixConn.oAuthTokens["xoauth_request_auth_url"]);
+                var tab = gBrowser.addTab(pixConn.oAuthTokens["xoauth_request_auth_url"]),
+                    aTab = gBrowser.selectedTab;
                 tab.addEventListener('load', function (event) {
                     gBrowser.selectedTab = tab;
-                    var code = gBrowser.contentDocument.getElementById('oauth_verifier').innerHTML;
-                    gBrowser.removeTab(tab);
-                    alert(code);
+                    var code = gBrowser.contentDocument.getElementById('oauth_verifier');
+                    if (code) {
+                        code = code.innerHTML;
+                        gBrowser.selectedTab = aTab;
+                        gBrowser.removeTab(tab);
+                        alert(code);
+                    } else {
+                        gBrowser.contentDocument.querySelector('input[name=username]').focus();
+                    }
                 }, false);
             }, 100);
             //alert(pixConn.httpReq.responseText);
