@@ -1,9 +1,16 @@
+var prefManager = Components.classes["@mozilla.org/preferences-service;1"]  
+                    .getService(Components.interfaces.nsIPrefBranch)
+                    .getBranch("extensions.pixImgUploader.");
+                            
+
 var pixImgUploader = {
   onLoad: function() {
     // initialization code
     this.initialized = true;
-    this.strings = document.getElementById("pixImgUploader-strings");
-    pixConn.oAuthLogin();
+    //this.strings = document.getElementById("pixImgUploader-strings");
+    pixConn.oAuthLogin(function () {
+        alert(this.getAlbumSets()['total']);
+    });
   },
 
   onMenuItemCommand: function(e) {
@@ -22,9 +29,11 @@ var pixImgUploader = {
 window.addEventListener("load", pixImgUploader.onLoad, false);
 
 pixConn = {
-    pixUrl: 'http://emma.pixnet.cc/',
+    pixUrl: 'http://emma.pixnet.cc',
     getOAuthTokenUrl: 'http://emma.pixnet.cc/oauth/request_token',
     getOAuthAccessTokenUrl: 'http://emma.pixnet.cc/oauth/access_token',
+    isLoginin: true,
+    loginCallback: null,
     oAuthTokens: {
         oauth_token: '',
         oauth_token_secret: 'c31ce58e4267489ec00bc0fc4a366fa9'
@@ -42,7 +51,6 @@ pixConn = {
     getTimestamp: function () {
         return Math.floor(new Date().getTime() / 1000);
     },
-    oAuthScope: 'http://emma.pixnet.cc/oauth/',
     authType: '',
     getOAuthInfo : function (method, url, tokenSecret, customParams, optoutParams) {
         var names = [];
@@ -96,23 +104,21 @@ pixConn = {
 
     },
     getAccessToken: function () {
-        var message = pixConn.getOAuthInfo('POST', pixConn.getOAuthAccessTokenUrl, pixConn.oAuthTokens['oauth_token_secret'],
-            {"oauth_verifier": pixConn.oAuthTokens['oauth_verifier'],
-             "oauth_token": pixConn.oAuthTokens['oauth_token']});
-
-        pixConn.httpReq = new XMLHttpRequest();
-        pixConn.httpReq.open("POST", pixConn.getOAuthAccessTokenUrl, false);
-        pixConn.httpReq.setRequestHeader('User-Agent', 'Mozilla/5.0');
-        pixConn.httpReq.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-        pixConn.httpReq.setRequestHeader('POST', pixConn.getOAuthAccessTokenUrl + ' HTTP/1.1');
-        pixConn.httpReq.setRequestHeader('Authorization', message.authHeader);
-        pixConn.httpReq.send();
-        if (pixConn.httpReq.status == 200){
-            pixConn.parseRequestToken(pixConn.httpReq.responseText);
-            pixConn.oAuthTokens['getAccessToken'] = true;
-            return true;
-        }
-        return false;
+        var that = this;
+        that.http(pixConn.getOAuthAccessTokenUrl, 'POST', 
+            {"oauth_verifier": pixConn.oAuthTokens['oauth_verifier'], "oauth_token": pixConn.oAuthTokens['oauth_token']}, 
+            function () {
+                XHR = this;
+                that.parseRequestToken(XHR.responseText);
+                that.oAuthTokens['getAccessToken'] = true;
+                prefManager.setCharPref('oauth_token', that.oAuthTokens.oauth_token);
+                prefManager.setCharPref('oauth_token_secret', that.oAuthTokens.oauth_token_secret);
+                that.isLogin = true;
+                if (typeof that.loginCallback == 'function') {
+                    that.loginCallback.apply(that); //that is pixConn
+                }
+                return true;
+            });
     },
     parseRequestToken: function (responseText) {
         var items = responseText.split('&');
@@ -123,38 +129,76 @@ pixConn = {
             }
         } 
     },
-    oAuthLogin : function() {
-        alert('a');
-        var message = pixConn.getOAuthInfo('POST', pixConn.getOAuthTokenUrl, '', {}),
-            signature = OAuth.getParameter(message.parameters, 'oauth_signature');
+    oAuthLogin : function(loginCallback) {
+        var that = this;
+        that.loginCallback = loginCallback;
+        pixConn.oAuthTokens['oauth_token'] = '';
+        pixConn.oAuthTokens['oauth_token_secret'] = '';
 
-        pixConn.httpReq = new XMLHttpRequest();
-        pixConn.httpReq.open("POST", pixConn.getOAuthTokenUrl, false);
-        pixConn.httpReq.setRequestHeader('User-Agent', 'Mozilla/5.0');
-        pixConn.httpReq.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-        pixConn.httpReq.setRequestHeader('POST', pixConn.getOAuthTokenUrl + ' HTTP/1.1');
-        pixConn.httpReq.setRequestHeader('Authorization', message.authHeader);
-        var params = 'oauth_signature=' + encodeURIComponent(Base64.encode(signature));
-        pixConn.httpReq.send(params);
-        if (pixConn.httpReq.status == 200){
-            pixConn.parseRequestToken(pixConn.httpReq.responseText);
-            setTimeout(function () {
-                var tab = gBrowser.addTab(pixConn.oAuthTokens["xoauth_request_auth_url"]),
-                    aTab = gBrowser.selectedTab;
-                tab.addEventListener('load', function (event) {
-                    gBrowser.selectedTab = tab;
-                    var code = gBrowser.contentDocument.getElementById('oauth_verifier');
-                    if (code) {
-                        code = code.innerHTML;
-                        gBrowser.selectedTab = aTab;
-                        gBrowser.removeTab(tab);
-                        alert(code);
-                    } else {
-                        gBrowser.contentDocument.querySelector('input[name=username]').focus();
-                    }
+        that.http(pixConn.getOAuthTokenUrl, 'POST', {}, 
+            function () {
+                XHR = this;
+                pixConn.parseRequestToken(XHR.responseText);
+                gBrowser.addEventListener('load', function () {
+                    gBrowser.removeEventListener('load', arguments.callee, false);
+                    var tab = gBrowser.addTab(that.oAuthTokens["xoauth_request_auth_url"]),
+                        aTab = gBrowser.selectedTab;
+                    tab.addEventListener('load', function (event) {
+                        gBrowser.selectedTab = tab;
+                        var code = gBrowser.contentDocument.getElementById('oauth_verifier');
+                        if (code) {
+                            tab.removeEventListener('load', arguments.callee, false);
+                            code = code.innerHTML;
+                            gBrowser.selectedTab = aTab;
+                            gBrowser.removeTab(tab);
+                            that.oAuthTokens['oauth_verifier'] = code;
+                            that.getAccessToken();
+                        } else {
+                            gBrowser.contentDocument.querySelector('input[name=username], input[name=password]').focus();
+                        }
+                    }, false);
+                
                 }, false);
-            }, 100);
-            //alert(pixConn.httpReq.responseText);
+            });
+    },
+    http: function (url, method, params, callback) {
+        if (typeof callback == 'undefined' && typeof params == 'function') {
+            callback = params;
+            params = {};
+        }
+        if (typeof params == 'undefined') {
+            params = {};
+        }
+        var message = this.getOAuthInfo(method, url, pixConn.oAuthTokens['oauth_token_secret'], params),
+            signature = OAuth.getParameter(message.parameters, 'oauth_signature'),
+            XHR = new XMLHttpRequest(),
+            params = '';
+        
+        XHR.open(method, url, false);
+        XHR.setRequestHeader('User-Agent', 'Mozilla/5.0');
+        XHR.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+        XHR.setRequestHeader(method, pixConn.getOAuthAccessTokenUrl + ' HTTP/1.1');
+        XHR.setRequestHeader('Authorization', message.authHeader);
+        params = 'oauth_signature=' + encodeURIComponent(Base64.encode(signature));
+        //XHR.send(params);
+        XHR.send();
+        
+        if (XHR.status == 200) {
+            if (typeof callback == 'function') {
+                callback.apply(XHR);
+            }
+            return XHR.responseText;
+        } else {
+            alert(XHR.responseText);
         }
     },
+    getAlbumSets: function () {
+        /*
+         * Url: /album/sets
+         * Method: GET
+         */
+        var url = this.pixUrl + '/album/sets',
+            res = this.http(url, 'GET', {"oauth_token": pixConn.oAuthTokens['oauth_token']});
+        return JSON.parse(res);
+    }
 };
