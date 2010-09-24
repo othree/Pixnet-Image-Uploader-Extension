@@ -1,3 +1,7 @@
+/*
+ * upload multipart data using xhr: http://mattn.kaoriya.net/software/lang/javascript/20090223173609.innerHTML
+ * using formdata and xhr: https://developer.mozilla.org/En/XMLHttpRequest/Using_XMLHttpRequest#Using_FormData_objects
+ */
 var prefManager = Components.classes["@mozilla.org/preferences-service;1"]  
                     .getService(Components.interfaces.nsIPrefBranch)
                     .getBranch("extensions.pixImgUploader.");
@@ -8,9 +12,16 @@ var pixImgUploader = {
     // initialization code
     this.initialized = true;
     //this.strings = document.getElementById("pixImgUploader-strings");
-    pixConn.oAuthLogin(function () {
-        alert(this.getAlbumSets()['total']);
-    });
+
+    function getAid() {
+        var album = pixConn.getAlbumSets();
+        alert(album.sets[0].id);
+    }
+    if (pixConn.isLogin) {
+        getAid();
+    } else {
+        pixConn.oAuthLogin(getAid);
+    }
   },
 
   onMenuItemCommand: function(e) {
@@ -32,12 +43,12 @@ pixConn = {
     pixUrl: 'http://emma.pixnet.cc',
     getOAuthTokenUrl: 'http://emma.pixnet.cc/oauth/request_token',
     getOAuthAccessTokenUrl: 'http://emma.pixnet.cc/oauth/access_token',
-    isLoginin: true,
     loginCallback: null,
     oAuthTokens: {
-        oauth_token: '',
-        oauth_token_secret: 'c31ce58e4267489ec00bc0fc4a366fa9'
+        oauth_token: prefManager.getCharPref('oauth_token'),
+        oauth_token_secret: prefManager.getCharPref('oauth_token_secret')
     },
+    isLogin: !(prefManager.getCharPref('oauth_token') == ''),
     oAuthSecret: {
         oauth_consumer_secret: 'c31ce58e4267489ec00bc0fc4a366fa9'
     },
@@ -202,3 +213,4 @@ pixConn = {
         return JSON.parse(res);
     }
 };
+
