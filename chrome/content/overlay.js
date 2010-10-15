@@ -4,10 +4,10 @@
  * upload multipart data using xhr: http://mattn.kaoriya.net/software/lang/javascript/20090223173609.innerHTML
  * using formdata and xhr: https://developer.mozilla.org/En/XMLHttpRequest/Using_XMLHttpRequest#Using_FormData_objects
  */
-var prefManager = Components.classes["@mozilla.org/preferences-service;1"].
-    getService(Components.interfaces.nsIPrefService).
-    getBranch("extensions.pixImgUploader."),
-                            
+var prefManager  = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefService).getBranch("extensions.pixImgUploader."),
+    CacheService = Cc['@mozilla.org/network/cache-service;1'].getService(Ci.nsICacheService),
+    ICache       = Ci.nsICache,
+
     defaultAlbumId = null,
 
     pixImgUploader = {
@@ -16,24 +16,94 @@ var prefManager = Components.classes["@mozilla.org/preferences-service;1"].
         this.initialized = true;
         //this.strings = document.getElementById("pixImgUploader-strings");
 
-        function getAid() {
-            var album = pixConn.getAlbumSets();
-            defaultAlbumId = album.sets[0].id;
-        }
         if (pixConn.isLogin) {
-            getAid();
-        //} else {
-            //pixConn.oAuthLogin(getAid);
+            pixImgUploader.getAid();
         }
     },
 
     onMenuItemCommand: function(e) {
+        if (!pixConn.isLogin) {
+            pixImgUploader.login(pixImgUploader.onMenuItemCommand);
+        } else if (defaultAlbumId === null) {
+            if (pixImgUploader.getAid()) {
+                pixImgUploader.onMenuItemCommand();
+            }
+        } else {
+            img = pixImgUploader.getCache(document.popupNode);
+            pixImgUploader.upload(defaultAlbumId, img);
+        }
+    },
+
+    login: function login(cb) {
+        pixConn.oAuthLogin(cb);
+    },
+
+    getAid: function getAid() {
+        if (pixConn.isLogin) {
+            var album = pixConn.getAlbumSets();
+            if (album && album.sets) {
+                defaultAlbumId = album.sets[0].id;
+                return true;
+            }
+        }
+        return false;
+    },
+
+    getCache: function (target) {
+        if (target.nodeName == 'IMG') {
+            alert(findCacheFile(target.src));
+        }
+    },
+
+    upload: function () {
     }
 };
 
-window.addEventListener("load", pixImgUploader.onLoad, false);
+// http://d.hatena.ne.jp/brazil/20080324/1206368648
+function findCacheFile(url) {
+    var entry;
+    CacheService.visitEntries({
+        visitDevice : function (deviceID, deviceInfo) {
+            if (deviceID == 'disk') {
+                return true;
+            }
+        },
+        visitEntry : function (deviceID, info) {
+            if(info.key != url) {
+                return true;
+            }
+            entry = {
+                clientID    : info.clientID, 
+                key         : info.key, 
+                streamBased : info.isStreamBased()
+            };
+        }
+    });
+  
+    if(!entry) {
+        return;
+    }
 
-pixConn = {
+    try {
+        var session = CacheService.createSession(
+            entry.clientID, 
+            ICache.STORE_ANYWHERE, 
+            entry.streamBased);
+        var descriptor = session.openCacheEntry(
+            entry.key, 
+            ICache.ACCESS_READ, 
+            false);
+
+        return descriptor.file;
+    } finally {
+        if (descriptor) {
+            descriptor.close();
+        }
+    }
+}
+
+
+var pixConn = {
     pixUrl: 'http://emma.pixnet.cc',
     getOAuthTokenUrl: 'http://emma.pixnet.cc/oauth/request_token',
     getOAuthAccessTokenUrl: 'http://emma.pixnet.cc/oauth/access_token',
@@ -42,7 +112,7 @@ pixConn = {
         oauth_token: prefManager.getCharPref('oauth_token'),
         oauth_token_secret: prefManager.getCharPref('oauth_token_secret')
     },
-    isLogin: !(prefManager.getCharPref('oauth_token') === ''),
+    isLogin: prefManager.getCharPref('oauth_token') !== '',
     oAuthSecret: {
         oauth_consumer_secret: 'c31ce58e4267489ec00bc0fc4a366fa9'
     },
@@ -209,3 +279,4 @@ pixConn = {
     }
 };
 
+window.addEventListener("load", pixImgUploader.onLoad, false);
