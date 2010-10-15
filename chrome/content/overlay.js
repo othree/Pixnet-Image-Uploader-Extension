@@ -3,9 +3,11 @@
  * using formdata and xhr: https://developer.mozilla.org/En/XMLHttpRequest/Using_XMLHttpRequest#Using_FormData_objects
  */
 var prefManager = Components.classes["@mozilla.org/preferences-service;1"]  
-                    .getService(Components.interfaces.nsIPrefBranch)
+                    .getService(Components.interfaces.nsIPrefService)
                     .getBranch("extensions.pixImgUploader.");
                             
+
+var defaultAlbumId = null;
 
 var pixImgUploader = {
   onLoad: function() {
@@ -15,25 +17,16 @@ var pixImgUploader = {
 
     function getAid() {
         var album = pixConn.getAlbumSets();
-        alert(album.sets[0].id);
+        defaultAlbumId = album.sets[0].id;
     }
     if (pixConn.isLogin) {
         getAid();
-    } else {
-        pixConn.oAuthLogin(getAid);
+    //} else {
+        //pixConn.oAuthLogin(getAid);
     }
   },
 
   onMenuItemCommand: function(e) {
-    var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
-                                  .getService(Components.interfaces.nsIPromptService);
-    promptService.alert(window, this.strings.getString("helloMessageTitle"),
-                                this.strings.getString("helloMessage"));
-  },
-
-  onToolbarButtonCommand: function(e) {
-    // just reuse the function above.  you can change this, obviously!
-    pixImgUploader.onMenuItemCommand(e);
   }
 };
 

@@ -19,7 +19,4 @@
               oncommand="pixImgUploader.onMenuItemCommand(event)"/>
   </popup>
 
-
-
-
 </overlay>
