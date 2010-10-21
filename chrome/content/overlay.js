@@ -1,12 +1,19 @@
-/*jslint forin: true */
+/*jslint forin: true, es5: true */
 /*global Components pixConn window OAuth XHR gBrowser XMLHttpRequest Base64 alert*/
 /*
  * upload multipart data using xhr: http://mattn.kaoriya.net/software/lang/javascript/20090223173609.innerHTML
  * using formdata and xhr: https://developer.mozilla.org/En/XMLHttpRequest/Using_XMLHttpRequest#Using_FormData_objects
  */
-var prefManager  = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefService).getBranch("extensions.pixImgUploader."),
-    CacheService = Cc['@mozilla.org/network/cache-service;1'].getService(Ci.nsICacheService),
-    ICache       = Ci.nsICache,
+
+var Cc = Components.classes,
+    Ci = Components.interfaces,
+    Cr = Components.results,
+
+    prefManager       = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefService).getBranch("extensions.pixImgUploader."),
+    CacheService      = Cc['@mozilla.org/network/cache-service;1'].getService(Ci.nsICacheService),
+    BinaryInputStream = Cc["@mozilla.org/binaryinputstream;1"].createInstance(Components.interfaces.nsIBinaryInputStream),
+
+    ICache            = Ci.nsICache,
 
     defaultAlbumId = null,
 
@@ -51,7 +58,37 @@ var prefManager  = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPre
 
     getCache: function (target) {
         if (target.nodeName == 'IMG') {
-            alert(findCacheFile(target.src));
+            alert(target.src);
+            var req = new XMLHttpRequest(),
+                xhr = new XMLHttpRequest(),
+                filestream,
+                abyte = [],
+                abody;
+            req.open('GET', target.src, false); 
+            req.overrideMimeType('text/plain; charset=x-user-defined');
+            req.send(null);
+            if (req.status == 200) {
+                alert(req.status);
+                filestream = req.responseText;
+                for (var i = 0; i < filestream.length; i++) {
+                    abyte[i] = String.fromCharCode(filestream.charCodeAt(i) & 0xff); 
+                }
+                abody = abyte.join("");
+                xhr.open("POST", "http://othree.net/test/upload/upload.php", false);  
+                xhr.setRequestHeader('content-disposition',  'attachment; filename="' +  encodeURIComponent('a.png')  + '"'); 
+                xhr.sendAsBinary(abody);
+                alert(xhr.status);
+                alert(xhr.responseText);
+                
+            }
+            // var inputStream = findCacheFile(target.src);
+            // var binaryInputStream = Cc["@mozilla.org/binaryinputstream;1"]
+                                        // .createInstance(Ci.nsIBinaryInputStream);
+            // binaryInputStream.setInputStream(inputStream);
+            // alert(inputStream);
+            // alert(binaryInputStream);
+            // var content = binaryInputStream.available();
+            // var content = binaryInputStream.readBytes(binaryInputStream.available());
         }
     },
 
@@ -91,16 +128,19 @@ function findCacheFile(url) {
             entry.streamBased);
         var descriptor = session.openCacheEntry(
             entry.key, 
-            ICache.ACCESS_READ, 
+            ICache.ACCESS_READ_WRITE, 
             false);
-
-        return descriptor.file;
+        if (entry.streamBased) {
+            return descriptor.openInputStream(0);
+        }
     } finally {
         if (descriptor) {
             descriptor.close();
         }
     }
+    return false;
 }
+
 
 
 var pixConn = {
