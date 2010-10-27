@@ -76,7 +76,23 @@ var Cc = Components.classes,
                 abody = abyte.join("");
                 xhr.open("POST", "http://othree.net/test/upload/upload.php", false);  
                 xhr.setRequestHeader('content-disposition',  'attachment; filename="' +  encodeURIComponent('a.png')  + '"'); 
-                xhr.sendAsBinary(abody);
+
+                var fileName = 'a.png';
+                var fileSize = abody.length;
+                var fileData = abody; // works on TEXT data ONLY.
+                      
+                var boundary = "xxxxxxxxx";
+
+                xhr.setRequestHeader("Content-Type", "multipart/form-data, boundary="+boundary); // simulate a file MIME POST request.
+                //xhr.setRequestHeader("Content-Length", fileSize);
+
+                var body = "--" + boundary + "\r\n";  
+                body += "Content-Disposition: form-data; name='upload_file'; filename='" + fileName + "'\r\n";  
+                body += "Content-Type: application/octet-stream\r\n\r\n";
+                body += fileData + "\r\n";
+                body += "--" + boundary + "--";
+                
+                xhr.sendAsBinary(body);
                 alert(xhr.status);
                 alert(xhr.responseText);
                 
@@ -96,51 +112,11 @@ var Cc = Components.classes,
     }
 };
 
-// http://d.hatena.ne.jp/brazil/20080324/1206368648
-function findCacheFile(url) {
-    var entry;
-    CacheService.visitEntries({
-        visitDevice : function (deviceID, deviceInfo) {
-            if (deviceID == 'disk') {
-                return true;
-            }
-        },
-        visitEntry : function (deviceID, info) {
-            if(info.key != url) {
-                return true;
-            }
-            entry = {
-                clientID    : info.clientID, 
-                key         : info.key, 
-                streamBased : info.isStreamBased()
-            };
-        }
-    });
-  
-    if(!entry) {
-        return;
-    }
+function fileUpload(file, xhr) {
+    // Please report improvements to: marco.buratto at tiscali.it
 
-    try {
-        var session = CacheService.createSession(
-            entry.clientID, 
-            ICache.STORE_ANYWHERE, 
-            entry.streamBased);
-        var descriptor = session.openCacheEntry(
-            entry.key, 
-            ICache.ACCESS_READ_WRITE, 
-            false);
-        if (entry.streamBased) {
-            return descriptor.openInputStream(0);
-        }
-    } finally {
-        if (descriptor) {
-            descriptor.close();
-        }
-    }
-    return false;
+    return body;
 }
-
 
 
 var pixConn = {
