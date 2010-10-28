@@ -5,6 +5,7 @@
     <script src="oauth.js"/>
     <script src="sha1.js"/>
     <script src="base64.js"/>
+    <script src="parseuri.js"/>
     <script src="overlay.js"/>
     <script src="ff-overlay.js"/>
 

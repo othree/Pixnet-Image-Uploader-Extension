@@ -37,7 +37,7 @@ var Cc = Components.classes,
             }
         } else {
             img = pixImgUploader.getCache(document.popupNode);
-            pixImgUploader.upload(defaultAlbumId, img);
+            pixConn.uploadImg(defaultAlbumId, 'XPI', '', img);
         }
     },
 
@@ -49,7 +49,9 @@ var Cc = Components.classes,
         if (pixConn.isLogin) {
             var album = pixConn.getAlbumSets();
             if (album && album.sets) {
-                defaultAlbumId = album.sets[0].id;
+                defaultAlbumId = album.sets[1].id;
+                alert(defaultAlbumId);
+                alert(defaultAlbumId);
                 return true;
             }
         }
@@ -57,11 +59,11 @@ var Cc = Components.classes,
     },
 
     getCache: function (target) {
-        if (target.nodeName == 'IMG') {
-            alert(target.src);
+        if (target.nodeName.toLowerCase() == 'img') {
             var req = new XMLHttpRequest(),
                 xhr = new XMLHttpRequest(),
                 filestream,
+                type,
                 abyte = [],
                 abody;
             req.open('GET', target.src, false); 
@@ -74,49 +76,25 @@ var Cc = Components.classes,
                     abyte[i] = String.fromCharCode(filestream.charCodeAt(i) & 0xff); 
                 }
                 abody = abyte.join("");
-                xhr.open("POST", "http://othree.net/test/upload/upload.php", false);  
-                xhr.setRequestHeader('content-disposition',  'attachment; filename="' +  encodeURIComponent('a.png')  + '"'); 
 
-                var fileName = 'a.png';
-                var fileSize = abody.length;
-                var fileData = abody; // works on TEXT data ONLY.
-                      
-                var boundary = "xxxxxxxxx";
-
-                xhr.setRequestHeader("Content-Type", "multipart/form-data, boundary="+boundary); // simulate a file MIME POST request.
-                //xhr.setRequestHeader("Content-Length", fileSize);
-
-                var body = "--" + boundary + "\r\n";  
-                body += "Content-Disposition: form-data; name='upload_file'; filename='" + fileName + "'\r\n";  
-                body += "Content-Type: application/octet-stream\r\n\r\n";
-                body += fileData + "\r\n";
-                body += "--" + boundary + "--";
-                
-                xhr.sendAsBinary(body);
-                alert(xhr.status);
-                alert(xhr.responseText);
-                
+                return {
+                    name: parseUri(target.src).file,
+                    size: abody.length,
+                    type: req.getResponseHeader('Content-type'),
+                    getAsBinary: function () {
+                        return abody;
+                    },
+                    getAsDataURL: function () {
+                    },
+                    getAsText: function () {
+                    }
+                };
             }
-            // var inputStream = findCacheFile(target.src);
-            // var binaryInputStream = Cc["@mozilla.org/binaryinputstream;1"]
-                                        // .createInstance(Ci.nsIBinaryInputStream);
-            // binaryInputStream.setInputStream(inputStream);
-            // alert(inputStream);
-            // alert(binaryInputStream);
-            // var content = binaryInputStream.available();
-            // var content = binaryInputStream.readBytes(binaryInputStream.available());
         }
-    },
-
-    upload: function () {
+        return null;
     }
+
 };
-
-function fileUpload(file, xhr) {
-    // Please report improvements to: marco.buratto at tiscali.it
-
-    return body;
-}
 
 
 var pixConn = {
@@ -253,27 +231,61 @@ var pixConn = {
                 }, false);
             });
     },
-    http: function (url, method, params, callback) {
-        if (typeof callback == 'undefined' && typeof params == 'function') {
+    http: function (url, method, params, files, callback) {
+        if (typeof callback == 'undefined' && typeof files == 'undefined' && typeof params == 'function') {
             callback = params;
+            files = [];
             params = {};
         }
+        if (typeof callback == 'undefined' && typeof files == 'function') {
+            callback = files;
+            files = [];
+        }
         if (typeof params == 'undefined') {
+            files = [];
             params = {};
         }
         var message = this.getOAuthInfo(method, url, pixConn.oAuthTokens.oauth_token_secret, params),
             signature = OAuth.getParameter(message.parameters, 'oauth_signature'),
-            XHR = new XMLHttpRequest();
-        params = '';
-        
+            XHR = new XMLHttpRequest(),
+            boundary = "pixpixpixpixpix",
+            i, f, body;
+
+        if (files && files.length > 0) {
+            f = files[0];
+            body = "";
+            for (i in params) {
+                body += "--" + boundary + "\r\n";  
+                body += "Content-Disposition: form-data; name='" + i + "'\r\n\r\n";  
+                body += params[i] + "\r\n";
+            }
+            body += "--" + boundary + "\r\n";  
+            body += "Content-Disposition: form-data; name='upload_file'; filename='" + f.name + "'\r\n";  
+            body += "Content-Type: " + f.type + "\r\n\r\n";
+            body += f.getAsBinary() + "\r\n";
+            body += "--" + boundary + "--";
+        }
+
         XHR.open(method, url, false);
+
         XHR.setRequestHeader('User-Agent', 'Mozilla/5.0');
-        XHR.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+        if (f) {
+            XHR.setRequestHeader('content-disposition',  'attachment; filename="' +  encodeURIComponent(f.name)  + '"'); 
+            XHR.setRequestHeader("Content-Type", "multipart/form-data, boundary="+boundary); // simulate a file MIME POST request.
+        } else {
+            XHR.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+        }
+
         XHR.setRequestHeader(method, pixConn.getOAuthAccessTokenUrl + ' HTTP/1.1');
         XHR.setRequestHeader('Authorization', message.authHeader);
         params = 'oauth_signature=' + encodeURIComponent(Base64.encode(signature));
         //XHR.send(params);
-        XHR.send();
+        if (f) {
+            //XHR.sendAsBinary(body);
+            XHR.send(body);
+        } else {
+            XHR.send();
+        }
         
         if (XHR.status == 200) {
             if (typeof callback == 'function') {
@@ -291,6 +303,20 @@ var pixConn = {
          */
         var url = this.pixUrl + '/album/sets',
             res = this.http(url, 'GET', {"oauth_token": pixConn.oAuthTokens.oauth_token});
+        return JSON.parse(res);
+    },
+    uploadImg: function (aid, title, description, img) {
+        /*
+         * Url: /album/sets/[:set_id]/elements
+         * Method: POST
+         * Params:
+         *   title
+         *   description
+         *   upload_file
+         */
+        var url = this.pixUrl + '/album/sets/' + aid + '/elements',
+            res = this.http(url, 'POST', {"oauth_token": pixConn.oAuthTokens.oauth_token, "title": title, "description": description}, [img]);
+        alert(res);
         return JSON.parse(res);
     }
 };
