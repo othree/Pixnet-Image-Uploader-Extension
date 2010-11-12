@@ -15,7 +15,7 @@ pixapi = {
         oauth_token: pixapiPref.getCharPref('oauth_token'),
         oauth_token_secret: pixapiPref.getCharPref('oauth_token_secret')
     },
-    isLogin: pixapiPref.getCharPref('oauth_token') !== '',
+    loggedin: pixapiPref.getCharPref('oauth_token') !== '',
     oAuthSecret: {
         oauth_consumer_secret: ''
     },
@@ -30,6 +30,9 @@ pixapi = {
         return Math.floor(new Date().getTime() / 1000);
     },
     authType: '',
+    isLogin: function () {
+        return !!loggedin;
+    },
     init: function (consumer) {
         var that = this;
         if (consumer.key && consumer.secret) {
@@ -100,7 +103,7 @@ pixapi = {
                 that.oAuthTokens.getAccessToken = true;
                 pixapiPref.setCharPref('oauth_token', that.oAuthTokens.oauth_token);
                 pixapiPref.setCharPref('oauth_token_secret', that.oAuthTokens.oauth_token_secret);
-                that.isLogin = true;
+                that.loggedin = true;
                 if (typeof that.loginCallback == 'function') {
                     that.loginCallback.apply(that); //that is pixapi
                 }
