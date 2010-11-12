@@ -1,5 +1,9 @@
 /*jslint forin: true */
 
+if (typeof OAuth == 'undefined') {
+    throw('oauth.js not include.');
+}
+
 var pixapiPref = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefService).getBranch("extensions.pixapi.");
 
 pixapi = {
@@ -13,12 +17,12 @@ pixapi = {
     },
     isLogin: pixapiPref.getCharPref('oauth_token') !== '',
     oAuthSecret: {
-        oauth_consumer_secret: 'c31ce58e4267489ec00bc0fc4a366fa9'
+        oauth_consumer_secret: ''
     },
     oAuthParameters: {
 	    oauth_version: '1.0',
-        oauth_consumer_key: '3f8d7aab86452992b12a0cb0d6b805ab',
-        oauth_callback: 'chrome://piximguploader/content/pixapi.xul', 
+        oauth_consumer_key: '',
+        oauth_callback: '', 
         oauth_signature_method: 'HMAC-SHA1',
         oauth_signature: null
     },
@@ -118,29 +122,28 @@ pixapi = {
         pixapi.oAuthTokens.oauth_token = '';
         pixapi.oAuthTokens.oauth_token_secret = '';
 
-        that.http(pixapi.getOAuthTokenUrl, 'POST', {}, 
-            function () {
-                XHR = this;
-                pixapi.parseRequestToken(XHR.responseText);
+        that.http(pixapi.getOAuthTokenUrl, 'POST', {}, function () {
+            XHR = this;
+            pixapi.parseRequestToken(XHR.responseText);
+            
+            var tab = gBrowser.addTab(that.oAuthTokens.xoauth_request_auth_url),
+                aTab = gBrowser.selectedTab;
                 
-                var tab = gBrowser.addTab(that.oAuthTokens.xoauth_request_auth_url),
-                    aTab = gBrowser.selectedTab;
-                tab.addEventListener('load', function (event) {
-                    gBrowser.selectedTab = tab;
-                    var code = gBrowser.contentDocument.getElementById('oauth_verifier');
-                    if (code) {
-                        tab.removeEventListener('load', arguments.callee, false);
-                        code = code.innerHTML;
-                        gBrowser.selectedTab = aTab;
-                        gBrowser.removeTab(tab);
-                        that.oAuthTokens.oauth_verifier = code;
-                        that.getAccessToken();
-                    } else {
-                        gBrowser.contentDocument.querySelector('input[name=username], input[name=password]').focus();
-                    }
-                }, false);
-                
-            });
+            tab.addEventListener('load', function (event) {
+                gBrowser.selectedTab = tab;
+                var code = gBrowser.contentDocument.getElementById('oauth_verifier');
+                if (code) {
+                    tab.removeEventListener('load', arguments.callee, false);
+                    code = code.innerHTML;
+                    gBrowser.selectedTab = aTab;
+                    gBrowser.removeTab(tab);
+                    that.oAuthTokens.oauth_verifier = code;
+                    that.getAccessToken();
+                } else {
+                    gBrowser.contentDocument.querySelector('input[name=username], input[name=password]').focus();
+                }
+            }, false);
+        });
     },
     http: function (url, method, params, files, callback) {
         if (typeof callback == 'undefined' && typeof files == 'undefined' && typeof params == 'function') {
@@ -156,66 +159,77 @@ pixapi = {
             files = [];
             params = {};
         }
+        
+        params.oauth_token = pixapi.oAuthTokens.oauth_token;
+
         var message = this.getOAuthInfo(method, url, pixapi.oAuthTokens.oauth_token_secret, params),
             signature = OAuth.getParameter(message.parameters, 'oauth_signature'),
             XHR = new XMLHttpRequest(),
             boundary = "pixpixpixpixpix",
-            i, f, body;
+            i, f, body = [];
 
         if (files && files.length > 0) {
             f = files[0];
-            body = "";
             for (i in params) {
-                body += "--" + boundary + "\r\n";  
-                body += "Content-Disposition: form-data; name='" + i + "'\r\n\r\n";  
-                body += params[i] + "\r\n";
+                body.push("--" + boundary + "\r\n");  
+                body.push("Content-Disposition: form-data; name='" + i + "'\r\n\r\n");  
+                body.push(params[i] + "\r\n");
             }
-            body += "--" + boundary + "\r\n";  
-            body += "Content-Disposition: form-data; name='upload_file'; filename='" + f.name + "'\r\n";  
-            body += "Content-Type: " + f.type + "\r\n\r\n";
-            body += f.getAsBinary() + "\r\n";
-            body += "--" + boundary + "--\r\n";
+            body.push("--" + boundary + "\r\n");  
+            body.push("Content-Disposition: form-data; name='upload_file'; filename='" + f.name + "'\r\n");  
+            body.push("Content-Type: " + f.type + "\r\n\r\n");
+            body.push(f.getAsBinary() + "\r\n");
+            body.push("--" + boundary + "--\r\n");
+            
+            body = body.join("");
         }
 
+        //always async
         XHR.open(method, url, true);
 
         XHR.setRequestHeader('User-Agent', 'Mozilla/5.0');
         if (f) {
-            XHR.setRequestHeader('content-disposition',  'attachment; filename="' +  encodeURIComponent(f.name)  + '"'); 
-            XHR.setRequestHeader("Content-Type", "multipart/form-data, boundary="+boundary); // simulate a file MIME POST request.
+            XHR.setRequestHeader('Content-Disposition',  'attachment; filename="' +  encodeURIComponent(f.name)  + '"'); 
+            XHR.setRequestHeader('Content-Type', 'multipart/form-data, boundary=' + boundary); // simulate a file MIME POST request.
         } else {
             XHR.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
         }
 
         XHR.setRequestHeader(method, pixapi.getOAuthAccessTokenUrl + ' HTTP/1.1');
         XHR.setRequestHeader('Authorization', message.authHeader);
-        params = 'oauth_signature=' + encodeURIComponent(Base64.encode(signature));
-        //XHR.send(params);
-        if (f) {
-            XHR.sendAsBinary(body);
-            //XHR.send(body);
-        } else {
-            XHR.send('oauth_callback=' + pixapi.oAuthParameters.oauth_callback);
-            //XHR.send();
-        }
-        
         XHR.onreadystatechange = function () {
-            if (XHR.status == 200) {
+            if (XHR.readyState == 4 && XHR.status == 200) {
                 if (typeof callback == 'function') {
-                    callback.call(XHR, XHR.responseText);
+                    var data = [];
+                    try {
+                        data = [JSON.parse(XHR.responseText)];
+                    } catch (e) {}
+                    callback.apply(XHR, data);
                 }
             }
         };
+
+        if (f) {
+            XHR.sendAsBinary(body);
+        } else {
+            XHR.send();
+        }
         
-        return true;
     },
     getAlbumSets: function (cb) {
         /*
          * Url: /album/sets
          * Method: GET
          */
-        var url = this.pixUrl + '/album/sets';
-        this.http(url, 'GET', {"oauth_token": pixapi.oAuthTokens.oauth_token}, null, cb);
+        var args = arguments, 
+            url;
+        if (!pixapi.isLogin) {
+            pixapi.oAuthLogin(function () {
+                pixapi.getAlbumSets.apply(this, args);
+            });
+        }
+        url = this.pixUrl + '/album/sets';
+        this.http(url, 'GET', cb);
     },
     uploadImg: function (aid, title, description, img, cb) {
         /*
@@ -226,8 +240,15 @@ pixapi = {
          *   description
          *   upload_file
          */
-        var url = this.pixUrl + '/album/sets/' + aid + '/elements';
-        this.http(url, 'POST', {"oauth_token": pixapi.oAuthTokens.oauth_token, "title": title, "description": description}, [img], cb);
+        var args = arguments, 
+            url;
+        if (!pixapi.isLogin) {
+            pixapi.oAuthLogin(function () {
+                pixapi.uploadImg.apply(this, args);
+            });
+        }
+        url = this.pixUrl + '/album/sets/' + aid + '/elements';
+        this.http(url, 'POST', {"title": title, "description": description}, [img], cb);
     }
 };
 

@@ -39,9 +39,7 @@ var oauth_consumer_key = '3f8d7aab86452992b12a0cb0d6b805ab',
         function upimg() {
             api.uploadImg(defaultAlbumId, '', '', pixImgUploader.getCache(node));
         }
-        if (!api.isLogin) {
-            pixImgUploader.login(pixImgUploader.onMenuItemCommand);
-        } else if (!defaultAlbumId) {
+        if (!defaultAlbumId) {
             pixImgUploader.getAid(upimg);
         } else {
             upimg();
@@ -53,17 +51,15 @@ var oauth_consumer_key = '3f8d7aab86452992b12a0cb0d6b805ab',
     },
 
     getAid: function getAid(cb) {
-        if (api.isLogin) {
-            var album,
-                parseAid = function (responseText) {
-                    album = JSON.parse(responseText);
-                    if (album && album.sets) {
-                        defaultAlbumId = album.sets[1].id;
-                        cb.call();
-                    }
-                };
-            api.getAlbumSets(parseAid);
-        }
+        var parseAid = function (album) {
+            if (album && album.sets) {
+                defaultAlbumId = album.sets[1].id;
+                if (typeof cb == 'function') {
+                    cb.call();
+                }
+            }
+        };
+        api.getAlbumSets(parseAid);
     },
 
     getCache: function (target) {
