@@ -31,7 +31,7 @@ pixapi = {
     },
     authType: '',
     isLogin: function () {
-        return !!loggedin;
+        return !!pixapi.loggedin;
     },
     init: function (consumer) {
         var that = this;

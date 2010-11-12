@@ -16,10 +16,7 @@ var oauth_consumer_key = '3f8d7aab86452992b12a0cb0d6b805ab',
     Cr = Components.results,
 
     prefManager       = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefService).getBranch("extensions.pixImgUploader."),
-    CacheService      = Cc['@mozilla.org/network/cache-service;1'].getService(Ci.nsICacheService),
-    BinaryInputStream = Cc["@mozilla.org/binaryinputstream;1"].createInstance(Components.interfaces.nsIBinaryInputStream),
-
-    ICache            = Ci.nsICache,
+    alertsService     = Cc["@mozilla.org/alerts-service;1"].getService(Components.interfaces.nsIAlertsService),
 
     defaultAlbumId = null,
 
@@ -37,7 +34,10 @@ var oauth_consumer_key = '3f8d7aab86452992b12a0cb0d6b805ab',
     onMenuItemCommand: function(e) {
         var node = document.popupNode;
         function upimg() {
-            api.uploadImg(defaultAlbumId, '', '', pixImgUploader.getCache(node));
+            var f = pixImgUploader.getCache(node);
+            api.uploadImg(defaultAlbumId, '', '', f, function () {
+                alertsService.showAlertNotification("",  "Upload Complete", f.name);
+            });
         }
         if (!defaultAlbumId) {
             pixImgUploader.getAid(upimg);
