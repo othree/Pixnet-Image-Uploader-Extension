@@ -228,8 +228,10 @@ pixapi = {
                 pixapi.getAlbumSets.apply(this, args);
             });
         }
-        url = this.pixUrl + '/album/sets';
-        this.http(url, 'GET', cb);
+        url = pixapi.pixUrl + '/album/sets';
+        setTimeout( function () {
+            pixapi.http(url, 'GET', cb);
+        }, 15); 
     },
     uploadImg: function (aid, title, description, img, cb) {
         /*
@@ -247,8 +249,10 @@ pixapi = {
                 pixapi.uploadImg.apply(this, args);
             });
         }
-        url = this.pixUrl + '/album/sets/' + aid + '/elements';
-        this.http(url, 'POST', {"title": title, "description": description}, [img], cb);
+        url = pixapi.pixUrl + '/album/sets/' + aid + '/elements';
+        setTimeout( function () {
+            pixapi.http(url, 'POST', {"title": title, "description": description}, [img], cb);
+        }, 15); 
     }
 };
 
