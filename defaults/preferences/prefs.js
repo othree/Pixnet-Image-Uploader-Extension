@@ -6,5 +6,5 @@ pref("extensions.pixImgUploader.stringpref", "A string");
 pref("extensions.pixImgUploader@pixnet.tw.description", "chrome://pixImgUploader/locale/overlay.properties");
 
 
-pref('extensions.pixImgUploader.oauth_token', '');
-pref('extensions.pixImgUploader.oauth_token_secret', '');
+pref('extensions.pixapi.oauth_token', '');
+pref('extensions.pixapi.oauth_token_secret', '');

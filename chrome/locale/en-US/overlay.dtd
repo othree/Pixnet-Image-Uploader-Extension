@@ -1,5 +1,5 @@
 <!ENTITY pixImgUploader.label "Your localized menuitem">
-<!ENTITY pixImgUploaderContext.label "Your Menuitem">
+<!ENTITY pixImgUploaderContext.label "Upload To Pixnet">
 <!ENTITY pixImgUploaderContext.accesskey "Y">
 <!ENTITY pixImgUploaderToolbarButton.label "Your Toolbar Button">
 <!ENTITY pixImgUploaderToolbarButton.tooltip "This is your toolbar button!">
