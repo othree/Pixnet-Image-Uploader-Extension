@@ -27,7 +27,6 @@ var oauth_consumer_key = '3f8d7aab86452992b12a0cb0d6b805ab',
         //this.strings = document.getElementById("pixImgUploader-strings");
 
         if (api.isLogin()) {
-            window.open('chrome://pixImgUploader/content/aidselector.xul', '', 'chrome');
             pixImgUploader.getAid();
         }
     },
