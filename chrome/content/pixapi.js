@@ -1,10 +1,15 @@
 /*jslint forin: true */
 
+(function () {
+
 if (typeof OAuth == 'undefined') {
     throw('oauth.js not include.');
 }
 
-var pixapiPref = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefService).getBranch("extensions.pixapi.");
+var Cc = Components.classes,
+    Ci = Components.interfaces,
+    Cr = Components.results,
+    pixapiPref = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefService).getBranch("extensions.pixapi.");
 
 pixapi = {
     pixUrl: 'http://emma.pixnet.cc',
@@ -259,3 +264,4 @@ pixapi = {
     }
 };
 
+})();
