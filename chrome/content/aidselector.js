@@ -1,9 +1,5 @@
 /*jslint forin: true, es5: true */
 /*global Components window OAuth XHR gBrowser XMLHttpRequest Base64 alert*/
-/*
- * upload multipart data using xhr: http://mattn.kaoriya.net/software/lang/javascript/20090223173609.innerHTML
- * using formdata and xhr: https://developer.mozilla.org/En/XMLHttpRequest/Using_XMLHttpRequest#Using_FormData_objects
- */
 
 
 var oauth_consumer_key = '3f8d7aab86452992b12a0cb0d6b805ab',

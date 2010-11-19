@@ -40,10 +40,8 @@ var oauth_consumer_key = '3f8d7aab86452992b12a0cb0d6b805ab',
             });
         }
         if (!api.isLogin()) {
-            alert('a');
             pixImgUploader.getAid(upimg);
         } else {
-            alert('b');
             defaultAlbumId = prefManager.getCharPref('defaultAlbumId');
             upimg();
         }

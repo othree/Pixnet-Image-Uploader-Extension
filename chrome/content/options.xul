@@ -10,6 +10,7 @@
     <hbox>
         <button id="choosealbum" label="Choose Album"></button>
         <button id="logout" label="Logout"></button>
+        <button id="login" label="Login"></button>
     </hbox>
   </prefpane>
 </prefwindow>
