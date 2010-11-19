@@ -8,6 +8,7 @@
     <em:creator>othree</em:creator>
     <em:contributor></em:contributor>
     <em:description>Use context menu to upload webpage images to Pixnet album.</em:description>
+    <em:optionsURL>chrome://pixImgUploader/content/options.xul</em:optionsURL>
     <em:targetApplication>
       <Description>
         <em:id>{ec8030f7-c20a-464f-9b0e-13a3a9e97384}</em:id> <!-- Firefox -->
