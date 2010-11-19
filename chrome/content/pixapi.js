@@ -2,9 +2,9 @@
 
 (function () {
 
-if (typeof OAuth == 'undefined') {
-    throw('oauth.js not include.');
-}
+//if (typeof OAuth == 'undefined') {
+    //throw('oauth.js not include.');
+//}
 
 var Cc = Components.classes,
     Ci = Components.interfaces,
@@ -20,7 +20,6 @@ pixapi = {
         oauth_token: pixapiPref.getCharPref('oauth_token'),
         oauth_token_secret: pixapiPref.getCharPref('oauth_token_secret')
     },
-    loggedin: pixapiPref.getCharPref('oauth_token') !== '',
     oAuthSecret: {
         oauth_consumer_secret: ''
     },
@@ -36,7 +35,11 @@ pixapi = {
     },
     authType: '',
     isLogin: function () {
-        return !!pixapi.loggedin;
+        return pixapiPref.getCharPref('oauth_token') !== '';
+    },
+    logout: function () {
+        pixapiPref.setCharPref('oauth_token', '');
+        pixapiPref.setCharPref('defaultAlbumId', '');
     },
     init: function (consumer) {
         var that = this;
@@ -231,7 +234,7 @@ pixapi = {
          */
         var args = arguments, 
             url;
-        if (!pixapi.isLogin) {
+        if (!pixapi.isLogin()) {
             pixapi.oAuthLogin(function () {
                 pixapi.getAlbumSets.apply(this, args);
             });
@@ -252,7 +255,7 @@ pixapi = {
          */
         var args = arguments, 
             url;
-        if (!pixapi.isLogin) {
+        if (!pixapi.isLogin()) {
             pixapi.oAuthLogin(function () {
                 pixapi.uploadImg.apply(this, args);
             });
