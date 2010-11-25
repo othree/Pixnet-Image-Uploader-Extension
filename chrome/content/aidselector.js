@@ -2,10 +2,7 @@
 /*global Components window OAuth XHR gBrowser XMLHttpRequest Base64 alert*/
 
 
-var oauth_consumer_key = '3f8d7aab86452992b12a0cb0d6b805ab',
-    oauth_consumer_secret = 'c31ce58e4267489ec00bc0fc4a366fa9',
-
-    api = pixapi.init({key: oauth_consumer_key, secret: oauth_consumer_secret}),
+var api = pixapi.init({key: oauth_consumer_key, secret: oauth_consumer_secret}),
 
     Cc = Components.classes,
     Ci = Components.interfaces,
@@ -14,34 +11,35 @@ var oauth_consumer_key = '3f8d7aab86452992b12a0cb0d6b805ab',
     prefManager       = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefService).getBranch("extensions.pixImgUploader."),
     alertsService     = Cc["@mozilla.org/alerts-service;1"].getService(Components.interfaces.nsIAlertsService),
 
-    defaultAlbumId = null;
+    defaultAlbumId;
 
-pixImgUploader = {
+    pixImgUploader = {
     onLoad: function() {
         // initialization code
         this.initialized = true;
         //this.strings = document.getElementById("pixImgUploader-strings");
 
         function parseOptions (sets) {
-            var menupopup = document.getElementById('albumidprefpopup'),
-                option, i;
+            var menulist = document.getElementById('albumidpref'),
+                i, j;
+            defaultAlbumId = prefManager.getCharPref('defaultAlbumId');
             for (i in sets) {
-                option = document.createElement('menuitem');
-                option.setAttribute('label', sets[i].title);
-                option.setAttribute('value', sets[i].id);
+                menulist.appendItem(sets[i].title, sets[i].id);
                 if (defaultAlbumId == sets[i].id) {
-                    option.setAttribute('selected', 'true');
+                    j = i;
                 }
-                menupopup.appendChild(option);
             }
+            menulist.selectedIndex = j;
         }
         if (api.isLogin()) {
             pixImgUploader.getAids(parseOptions);
         }
         document.getElementById('aiddone').addEventListener('click', function () {
-            var menupopup = document.getElementById('albumidpref');
-            defaultAlbumId = menupopup.value;
+            var menulist = document.getElementById('albumidpref');
+            defaultAlbumId = menulist.value;
+            defaultAlbumTitle = menulist.label;
             prefManager.setCharPref('defaultAlbumId', defaultAlbumId);
+            prefManager.setCharPref('defaultAlbumTitle', encodeURIComponent(defaultAlbumTitle));
             window.close();
         }, false);
     },
@@ -54,6 +52,7 @@ pixImgUploader = {
         var parseAids = function (album) {
             if (album && album.sets) {
                 defaultAlbumId = album.sets[1].id;
+                defaultAlbumTitle = album.sets[1].title;
                 if (typeof cb == 'function') {
                     cb.call(null, album.sets);
                 }

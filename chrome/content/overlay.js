@@ -6,10 +6,7 @@
  */
 
 
-var oauth_consumer_key = '3f8d7aab86452992b12a0cb0d6b805ab',
-    oauth_consumer_secret = 'c31ce58e4267489ec00bc0fc4a366fa9',
-
-    api = pixapi.init({key: oauth_consumer_key, secret: oauth_consumer_secret}),
+var api = pixapi.init({key: oauth_consumer_key, secret: oauth_consumer_secret}),
 
     Cc = Components.classes,
     Ci = Components.interfaces,
@@ -18,7 +15,8 @@ var oauth_consumer_key = '3f8d7aab86452992b12a0cb0d6b805ab',
     prefManager       = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefService).getBranch("extensions.pixImgUploader."),
     alertsService     = Cc["@mozilla.org/alerts-service;1"].getService(Components.interfaces.nsIAlertsService),
 
-    defaultAlbumId = null,
+    defaultAlbumId,
+    defaultAlbumTitle,
 
     pixImgUploader = {
     onLoad: function() {
@@ -26,9 +24,9 @@ var oauth_consumer_key = '3f8d7aab86452992b12a0cb0d6b805ab',
         this.initialized = true;
         //this.strings = document.getElementById("pixImgUploader-strings");
 
-        if (api.isLogin()) {
-            pixImgUploader.getAid();
-        }
+        //if (api.isLogin()) {
+            //pixImgUploader.getAid();
+        //}
     },
 
     onMenuItemCommand: function(e) {
@@ -36,13 +34,14 @@ var oauth_consumer_key = '3f8d7aab86452992b12a0cb0d6b805ab',
         function upimg() {
             var f = pixImgUploader.getCache(node);
             api.uploadImg(defaultAlbumId, '', '', f, function () {
-                alertsService.showAlertNotification("",  "Upload Complete", f.name);
+                alertsService.showAlertNotification("",  "Upload Complete", f.name + " to " + defaultAlbumTitle);
             });
         }
         if (!api.isLogin()) {
             pixImgUploader.getAid(upimg);
         } else {
             defaultAlbumId = prefManager.getCharPref('defaultAlbumId');
+            defaultAlbumTitle = decodeURIComponent(prefManager.getCharPref('defaultAlbumTitle'));
             upimg();
         }
     },
@@ -55,6 +54,9 @@ var oauth_consumer_key = '3f8d7aab86452992b12a0cb0d6b805ab',
         var parseAid = function (album) {
             if (album && album.sets) {
                 defaultAlbumId = album.sets[1].id;
+                defaultAlbumTitle = album.sets[1].title;
+                prefManager.setCharPref('defaultAlbumId', defaultAlbumId);
+                prefManager.setCharPref('defaultAlbumTitle', defaultAlbumTitle);
                 if (typeof cb == 'function') {
                     cb.call();
                 }

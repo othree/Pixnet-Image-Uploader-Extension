@@ -5,13 +5,12 @@
     <script src="sha1.js"/>
     <script src="base64.js"/>
     <script src="parseuri.js"/>
+    <script src="apikey.js"/>
     <script src="pixapi.js"/>
     <script src="aidselector.js"/>
             
     <hbox align="center" width="200">
     <menulist id="albumidpref" preference="intpref1" width="175">
-        <menupopup id="albumidprefpopup">
-        </menupopup>
     </menulist>
     <button id="aiddone" label="OK"></button>
     </hbox>

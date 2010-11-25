@@ -1,8 +1,5 @@
 
-var oauth_consumer_key = '3f8d7aab86452992b12a0cb0d6b805ab',
-    oauth_consumer_secret = 'c31ce58e4267489ec00bc0fc4a366fa9',
-
-    api = pixapi.init({key: oauth_consumer_key, secret: oauth_consumer_secret}),
+var api = pixapi.init({key: oauth_consumer_key, secret: oauth_consumer_secret}),
 
     Cc = Components.classes,
     Ci = Components.interfaces,
@@ -14,8 +11,8 @@ var oauth_consumer_key = '3f8d7aab86452992b12a0cb0d6b805ab',
 window.addEventListener('load', function () {
 
     var choosealbum = document.getElementById('choosealbum'),
-        logout      = document.getElementById('logout'),
-        login       = document.getElementById('login');
+        logout      = document.getElementById('logout');
+    
     function loggedout() {
         window.close();
     }
@@ -26,7 +23,8 @@ window.addEventListener('load', function () {
     }
 
     choosealbum.addEventListener('click', function () {
-        window.open('chrome://pixImgUploader/content/aidselector.xul', '', 'chrome');
+        window.open('chrome://pixImgUploader/content/aidselector.xul', '', 'chrome,centerscreen');
+        window.close();
     }, false);
 
     logout.addEventListener('click', function () {
@@ -35,12 +33,16 @@ window.addEventListener('load', function () {
         loggedout();
     }, false);
 
-    login.addEventListener('click', function () {
-        api.login(loggedin);
-    }, false);
-
     if (!api.isLogin()) {
-        loggedout();
+        setTimeout(function () {
+            var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
+                    .getService(Components.interfaces.nsIWindowMediator),
+                browserWindow = wm.getMostRecentWindow("navigator:browser");
+
+            alert('Please login First');
+            browserWindow.pixImgUploader.login();
+            loggedout();
+        }, 25);
     }
 
 }, false);
