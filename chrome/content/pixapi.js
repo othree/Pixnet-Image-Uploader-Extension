@@ -179,21 +179,20 @@ pixapi = {
             boundary = "pixpixpixpixpix",
             i, f, body = [];
 
+        for (i in params) {
+            body.push("--" + boundary + "\r\n");  
+            body.push("Content-Disposition: form-data; name='" + i + "'\r\n\r\n");  
+            body.push(params[i] + "\r\n");
+        }
         if (files && files.length > 0) {
             f = files[0];
-            for (i in params) {
-                body.push("--" + boundary + "\r\n");  
-                body.push("Content-Disposition: form-data; name='" + i + "'\r\n\r\n");  
-                body.push(params[i] + "\r\n");
-            }
             body.push("--" + boundary + "\r\n");  
             body.push("Content-Disposition: form-data; name='upload_file'; filename='" + f.name + "'\r\n");  
             body.push("Content-Type: " + f.type + "\r\n\r\n");
             body.push(f.getAsBinary() + "\r\n");
             body.push("--" + boundary + "--\r\n");
-            
-            body = body.join("");
         }
+        body = body.join("");
 
         //always async
         XHR.open(method, url, true);
@@ -203,7 +202,8 @@ pixapi = {
             XHR.setRequestHeader('Content-Disposition',  'attachment; filename="' +  encodeURIComponent(f.name)  + '"'); 
             XHR.setRequestHeader('Content-Type', 'multipart/form-data, boundary=' + boundary); // simulate a file MIME POST request.
         } else {
-            XHR.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+            //XHR.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+            XHR.setRequestHeader('Content-Type', 'multipart/form-data, boundary=' + boundary); // simulate a file MIME POST request.
         }
 
         XHR.setRequestHeader(method, pixapi.getOAuthAccessTokenUrl + ' HTTP/1.1');
@@ -223,9 +223,26 @@ pixapi = {
         if (f) {
             XHR.sendAsBinary(body);
         } else {
-            XHR.send();
+            XHR.send(body);
         }
         
+    },
+    newAlbumSet: function (input, cb) {
+        /*
+         * Url: /album/sets
+         * Method: POST
+         */
+        var args = arguments, 
+            url;
+        if (!pixapi.isLogin()) {
+            pixapi.oAuthLogin(function () {
+                pixapi.getAlbumSets.apply(this, args);
+            });
+        }
+        url = pixapi.pixUrl + '/album/sets';
+        setTimeout( function () {
+            pixapi.http(url, 'POST', input, cb);
+        }, 15); 
     },
     getAlbumSets: function (cb) {
         /*

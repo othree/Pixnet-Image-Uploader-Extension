@@ -51,14 +51,38 @@ var api = pixapi.init({key: oauth_consumer_key, secret: oauth_consumer_secret}),
     },
 
     getAid: function getAid(cb) {
+        function setid(set, cb) {
+            defaultAlbumId = set.id;
+            defaultAlbumTitle = set.title;
+            prefManager.setCharPref('defaultAlbumId', defaultAlbumId);
+            prefManager.setCharPref('defaultAlbumTitle', defaultAlbumTitle);
+            if (typeof cb == 'function') {
+                cb.call();
+            }
+        }
         var parseAid = function (album) {
+            var i, flag =true;
             if (album && album.sets) {
-                defaultAlbumId = album.sets[1].id;
-                defaultAlbumTitle = album.sets[1].title;
-                prefManager.setCharPref('defaultAlbumId', defaultAlbumId);
-                prefManager.setCharPref('defaultAlbumTitle', defaultAlbumTitle);
-                if (typeof cb == 'function') {
-                    cb.call();
+                for (i in album.sets) {
+                    if (album.sets[i].title == 'Right Click Upload') {
+                        setid(album.sets[i], cb);
+                        flag = false;
+                        break;
+                    }
+                }
+                if (flag) {
+                    api.newAlbumSet({
+                        title: 'Right Click Upload',
+                        description: '',
+                        permission: '0',
+                        is_lockright: '0',
+                        allow_cc: '0',
+                        cancomment: '1'
+                    }, function (album) {
+                        if (album && album.set) {
+                            setid(album.set, cb);
+                        }
+                    });
                 }
             }
         };
