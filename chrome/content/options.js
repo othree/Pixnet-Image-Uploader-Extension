@@ -28,9 +28,11 @@ window.addEventListener('load', function () {
     }, false);
 
     logout.addEventListener('click', function () {
-        api.logout();
-        alertsService.showAlertNotification("",  "Logout", "Logout Complete");
-        loggedout();
+        if (confirm("Logout ?")) {
+            api.logout();
+            alertsService.showAlertNotification("",  "Logout", "Logout Complete");
+            loggedout();
+        }
     }, false);
 
     if (!api.isLogin()) {
