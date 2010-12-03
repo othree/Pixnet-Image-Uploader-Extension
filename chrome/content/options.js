@@ -6,12 +6,16 @@ var api = pixapi.init({key: oauth_consumer_key, secret: oauth_consumer_secret}),
     Cr = Components.results,
 
     prefManager       = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefService).getBranch("extensions.pixImgUploader."),
-    alertsService     = Cc["@mozilla.org/alerts-service;1"].getService(Components.interfaces.nsIAlertsService);
+    alertsService     = Cc["@mozilla.org/alerts-service;1"].getService(Components.interfaces.nsIAlertsService),
+
+    strbundle;
 
 window.addEventListener('load', function () {
 
     var choosealbum = document.getElementById('choosealbum'),
         logout      = document.getElementById('logout');
+
+    strbundle = document.getElementById("pixImgUploader-strings");
     
     function loggedout() {
         window.close();
@@ -28,9 +32,9 @@ window.addEventListener('load', function () {
     }, false);
 
     logout.addEventListener('click', function () {
-        if (confirm("Logout ?")) {
+        if (confirm(strbundle.getString('confirmlogout'))) {
             api.logout();
-            alertsService.showAlertNotification("",  "Logout", "Logout Complete");
+            alertsService.showAlertNotification("",  strbundle.getString('logoutcomplete'), '');
             loggedout();
         }
     }, false);
@@ -41,7 +45,7 @@ window.addEventListener('load', function () {
                     .getService(Components.interfaces.nsIWindowMediator),
                 browserWindow = wm.getMostRecentWindow("navigator:browser");
 
-            alert('Please login First');
+            alert(strbundle.getString('pleaseloginfirst'));
             browserWindow.pixImgUploader.login();
             loggedout();
         }, 25);

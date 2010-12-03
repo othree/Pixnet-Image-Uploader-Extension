@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
-<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" title="Title">
+<!DOCTYPE prefwindow SYSTEM "chrome://pixImgUploader/locale/options.dtd">
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" title="&pix.choosealbum;">
     <script src="oauth.js"/>
     <script src="sha1.js"/>
     <script src="base64.js"/>

@@ -5,12 +5,17 @@
     <script src="apikey.js"/>
     <script src="pixapi.js"/>
     <script src="options.js"/>
+
+  <stringbundleset id="stringbundleset">
+    <stringbundle id="pixImgUploader-strings" src="chrome://pixImgUploader/locale/options.properties"/>
+  </stringbundleset>
+
   <prefpane id="pane1" label="&pane1.title;">
     <preferences>
     </preferences>
     <hbox>
-        <button id="choosealbum" label="Choose Album"></button>
-        <button id="logout" label="Logout"></button>
+        <button id="choosealbum" label="&pix.choosealbum;"></button>
+        <button id="logout" label="&pix.logout;"></button>
     </hbox>
   </prefpane>
 </prefwindow>

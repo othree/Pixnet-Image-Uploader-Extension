@@ -1,8 +1,4 @@
-<!ENTITY prefwindow.title "Pixnet Image Uploader preferences">
-<!ENTITY pane1.title "Pixnet Image Uploader preferences">
-<!ENTITY checkboolpref.label "A Boolean Preference">
-<!ENTITY checkboolpref.accesskey "B">
-<!ENTITY intpref.label "An Integer Preference">
-<!ENTITY intpref.accesskey "I">
-<!ENTITY stringpref.label "A String Preference">
-<!ENTITY stringpref.accesskey "S">
+<!ENTITY prefwindow.title "PIXNET IMAGE UPLOADER preferences">
+<!ENTITY pane1.title "PIXNET IMAGE UPLOADER preferences">
+<!ENTITY pix.choosealbum "CHOOSE ALBUM">
+<!ENTITY pix.logout "LOGOUT">

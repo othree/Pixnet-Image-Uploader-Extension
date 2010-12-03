@@ -17,7 +17,6 @@
 
   <popup id="contentAreaContextMenu">
     <menuitem id="context-pixImgUploader" label="&pixImgUploaderContext.label;"
-              accesskey="&pixImgUploaderContext.accesskey;"
               oncommand="pixImgUploader.onMenuItemCommand(event)"/>
   </popup>
 

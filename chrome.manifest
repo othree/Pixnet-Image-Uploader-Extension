@@ -1,5 +1,6 @@
 content   pixImgUploader                 chrome/content/
 skin      pixImgUploader   classic/1.0   chrome/skin/
 locale    pixImgUploader   en-US         chrome/locale/en-US/
+locale    pixImgUploader   zh-TW         chrome/locale/zh-TW/
 
 overlay   chrome://browser/content/browser.xul   chrome://pixImgUploader/content/ff-overlay.xul

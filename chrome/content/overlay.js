@@ -18,11 +18,13 @@ var api = pixapi.init({key: oauth_consumer_key, secret: oauth_consumer_secret}),
     defaultAlbumId,
     defaultAlbumTitle,
 
+    strbundle,
+
     pixImgUploader = {
     onLoad: function() {
         // initialization code
         this.initialized = true;
-        //this.strings = document.getElementById("pixImgUploader-strings");
+        strbundle = document.getElementById("pixImgUploader-strings");
 
         //if (api.isLogin()) {
             //pixImgUploader.getAid();
@@ -34,7 +36,7 @@ var api = pixapi.init({key: oauth_consumer_key, secret: oauth_consumer_secret}),
         function upimg() {
             var f = pixImgUploader.getCache(node);
             api.uploadImg(defaultAlbumId, '', '', f, function () {
-                alertsService.showAlertNotification("",  "Upload Complete", f.name + " to " + defaultAlbumTitle);
+                alertsService.showAlertNotification("",  strbundle.getString('uploadcomplete'), f.name + " " + strbundle.getString('to') + " " + defaultAlbumTitle);
             });
         }
         if (!api.isLogin()) {
