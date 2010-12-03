@@ -170,7 +170,7 @@ pixapi = {
             files = [];
             params = {};
         }
-        
+
         params.oauth_token = pixapi.oAuthTokens.oauth_token;
 
         var message = this.getOAuthInfo(method, url, pixapi.oAuthTokens.oauth_token_secret, params),
@@ -179,20 +179,32 @@ pixapi = {
             boundary = "pixpixpixpixpix",
             i, f, body = [];
 
-        for (i in params) {
-            body.push("--" + boundary + "\r\n");  
-            body.push("Content-Disposition: form-data; name='" + i + "'\r\n\r\n");  
-            body.push(params[i] + "\r\n");
+        delete params.oauth_token;
+
+        if (method == "POST") {
+            for (i in params) {
+                body.push("--" + boundary + "\r\n");  
+                body.push("Content-Disposition: form-data; name='" + i + "'\r\n\r\n");  
+                body.push(params[i] + "\r\n");
+            }
+            if (files && files.length > 0) {
+                f = files[0];
+                body.push("--" + boundary + "\r\n");  
+                body.push("Content-Disposition: form-data; name='upload_file'; filename='" + f.name + "'\r\n");  
+                body.push("Content-Type: " + f.type + "\r\n\r\n");
+                body.push(f.getAsBinary() + "\r\n");
+                body.push("--" + boundary + "--\r\n");
+            }
+            body = body.join("");
+        } else {
+            for (i in params) {
+                body.push(encodeURIComponent(i) + '=' + encodeURIComponent(params[i]));  
+            }
+            if (body.length > 0) {
+                url += ('?' + body.join('&'));
+            }
+            body = '';
         }
-        if (files && files.length > 0) {
-            f = files[0];
-            body.push("--" + boundary + "\r\n");  
-            body.push("Content-Disposition: form-data; name='upload_file'; filename='" + f.name + "'\r\n");  
-            body.push("Content-Type: " + f.type + "\r\n\r\n");
-            body.push(f.getAsBinary() + "\r\n");
-            body.push("--" + boundary + "--\r\n");
-        }
-        body = body.join("");
 
         //always async
         XHR.open(method, url, true);
@@ -220,10 +232,14 @@ pixapi = {
             }
         };
 
-        if (f) {
-            XHR.sendAsBinary(body);
+        if (method == "POST") {
+            if (f) {
+                XHR.sendAsBinary(body);
+            } else {
+                XHR.send(body);
+            }
         } else {
-            XHR.send(body);
+            XHR.send(null);
         }
         
     },
@@ -244,7 +260,7 @@ pixapi = {
             pixapi.http(url, 'POST', input, cb);
         }, 15); 
     },
-    getAlbumSets: function (cb) {
+    getAlbumSets: function (input, cb) {
         /*
          * Url: /album/sets
          * Method: GET
@@ -258,7 +274,7 @@ pixapi = {
         }
         url = pixapi.pixUrl + '/album/sets';
         setTimeout( function () {
-            pixapi.http(url, 'GET', cb);
+            pixapi.http(url, 'GET', input, cb);
         }, 15); 
     },
     uploadImg: function (aid, title, description, img, cb) {

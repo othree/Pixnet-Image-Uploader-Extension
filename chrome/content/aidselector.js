@@ -50,15 +50,19 @@ var api = pixapi.init({key: oauth_consumer_key, secret: oauth_consumer_secret}),
 
     getAids: function getAids(cb) {
         var parseAids = function (album) {
-            if (album && album.sets) {
-                defaultAlbumId = album.sets[1].id;
-                defaultAlbumTitle = album.sets[1].title;
-                if (typeof cb == 'function') {
-                    cb.call(null, album.sets);
+            if (album) {
+                if (album.sets && album.total != album.sets.length) {
+                    api.getAlbumSets({per_page: album.total}, parseAids);
+                } else if (album.sets) {
+                    defaultAlbumId = album.sets[1].id;
+                    defaultAlbumTitle = album.sets[1].title;
+                    if (typeof cb == 'function') {
+                        cb.call(null, album.sets);
+                    }
                 }
             }
         };
-        api.getAlbumSets(parseAids);
+        api.getAlbumSets({per_page: 100}, parseAids);
     },
 
 };
